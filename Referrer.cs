@@ -71,6 +71,7 @@ class Referrer
         clients.Add(peer.Id, new Client(peer));
         Send(clients[peer.Id], IDPacket(peer.Id), DeliveryMethod.ReliableOrdered);
         Console.WriteLine("Client " + peer.EndPoint.ToString() + " Connected!");
+        Console.WriteLine("Number of Clients Online: " + clients.Count);
     }
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
@@ -90,6 +91,7 @@ class Referrer
         }
 
         clients.Remove(peer.Id);
+        Console.WriteLine("Number of Clients Online: " + clients.Count);
     }
 
     public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
