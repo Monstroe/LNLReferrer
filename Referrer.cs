@@ -52,6 +52,13 @@ class Referrer
         Console.WriteLine("Starting Referrer...");
         Port = port;
         netManager.Start(Port);
+        
+        listener.PeerConnectedEvent += OnPeerConnected;
+        listener.PeerDisconnectedEvent += OnPeerDisconnected;
+        listener.NetworkReceiveEvent += OnNetworkReceive;
+        listener.NetworkErrorEvent += OnNetworkError;
+        listener.ConnectionRequestEvent += OnConnectionRequest;
+        
         while (true)
         {
             netManager.PollEvents();
