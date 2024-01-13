@@ -42,8 +42,8 @@ class Referrer
             { "CREATEROOM", CreateRoom },
             { "JOINROOM", JoinRoom },
             { "LEAVEROOM", LeaveRoom },
-            { "CLOSEROOM", CloseRoom },
-            { "STARTROOM", StartRoom }
+            { "STARTROOM", StartRoom },
+            { "CLOSEROOM", CloseRoom }
         };
     }
 
@@ -103,7 +103,7 @@ class Referrer
 
         if (packetHandlers.ContainsKey(command))
         {
-            packetHandlers[command](clients[peer.Id], message);
+            packetHandlers[command.ToUpper()](clients[peer.Id], message);
         }
         else
         {
@@ -197,6 +197,8 @@ class Referrer
             {
                 Send(member, MemberJoinedPacket(client.ID), DeliveryMethod.ReliableOrdered);
             }
+
+            Send(client, RoomMembersPacket(room.Members), DeliveryMethod.ReliableOrdered);
         }
         else
         {
@@ -275,6 +277,17 @@ class Referrer
         return "ROOMCODE:" + roomCode;
     }
 
+    public string RoomMembersPacket(List<Client> members)
+    {
+        string packet = "ROOMMEMBERS:";
+        foreach (Client member in members)
+        {
+            packet += member.ID + ",";
+        }
+        packet = packet.Substring(0, packet.Length - 1);
+        return packet;
+    }
+
     public string MemberJoinedPacket(int memberID)
     {
         return "MEMBERJOIN:" + memberID;
@@ -285,14 +298,14 @@ class Referrer
         return "MEMBERLEFT:" + memberID;
     }
 
-    public string RoomClosedPacket()
-    {
-        return "ROOMCLOSED:ACK";
-    }
-
     public string RoomStartPacket()
     {
         return "ROOMSTART:ACK";
+    }
+
+    public string RoomClosedPacket()
+    {
+        return "ROOMCLOSED:ACK";
     }
 
     public string InvalidPacket(string errorMessage)
