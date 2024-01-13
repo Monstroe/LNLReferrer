@@ -58,7 +58,7 @@ class Referrer
         listener.NetworkReceiveEvent += OnNetworkReceive;
         listener.NetworkErrorEvent += OnNetworkError;
         listener.ConnectionRequestEvent += OnConnectionRequest;
-        
+
         while (true)
         {
             netManager.PollEvents();
@@ -70,12 +70,12 @@ class Referrer
     {
         clients.Add(peer.Id, new Client(peer));
         Send(clients[peer.Id], IDPacket(peer.Id), DeliveryMethod.ReliableOrdered);
-        Console.WriteLine("Client " + peer.ToString() + " Connected!");
+        Console.WriteLine("Client " + peer.EndPoint.ToString() + " Connected!");
     }
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
-        Console.WriteLine("Client " + peer.ToString() + " Disconnected: " + disconnectInfo.Reason.ToString());
+        Console.WriteLine("Client " + peer.EndPoint.ToString() + " Disconnected: " + disconnectInfo.Reason.ToString());
 
         if (clients[peer.Id].CurrentRoom != null)
         {
@@ -105,7 +105,7 @@ class Referrer
 
         if (deliveryMethod != DeliveryMethod.Unreliable)
         {
-            Console.WriteLine("Packet Received from " + peer.ToString() + ": " + command);
+            Console.WriteLine("Packet Received from " + peer.EndPoint.ToString() + ": " + command);
         }
 
         if (packetHandlers.ContainsKey(command))
@@ -127,7 +127,7 @@ class Referrer
             }
             else
             {
-                Console.Error.WriteLine("Client " + peer.ToString() + " Sent Invalid Packet: " + packet);
+                Console.Error.WriteLine("Client " + peer.EndPoint.ToString() + " Sent Invalid Packet: " + packet);
             }
         }
     }
@@ -162,7 +162,7 @@ class Referrer
 
     public void LeaveRoom(Client client, Room room)
     {
-        Console.WriteLine("Client " + client.Peer.ToString() + " Left Room with Code: " + room.ID);
+        Console.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Left Room with Code: " + room.ID);
         Send(room.Members/*GetMembersExcept(client)*/, MemberLeftPacket(client.ID), DeliveryMethod.ReliableOrdered);
         room.Members.Remove(client);
     }
@@ -187,7 +187,7 @@ class Referrer
         client.CurrentRoom = room;
         rooms.Add(room.ID, room);
 
-        Console.WriteLine("Creating Room... New Room Code for Client " + client.Peer.ToString() + ": " + room.ID);
+        Console.WriteLine("Creating Room... New Room Code for Client " + client.Peer.EndPoint.ToString() + ": " + room.ID);
         Send(client, RoomCodePacket(room.ID), DeliveryMethod.ReliableOrdered);
     }
 
@@ -199,7 +199,7 @@ class Referrer
             room.Members.Add(client);
             client.CurrentRoom = room;
 
-            Console.WriteLine("Client " + client.Peer.ToString() + " Joining Room with Code: " + room.ID);
+            Console.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Joining Room with Code: " + room.ID);
             foreach (Client member in room.Members)// room.GetMembersExcept(client))
             {
                 Send(member, MemberJoinedPacket(client.ID), DeliveryMethod.ReliableOrdered);
@@ -209,7 +209,7 @@ class Referrer
         }
         else
         {
-            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Sent Invalid Room Code: " + roomID);
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Sent Invalid Room Code: " + roomID);
             Send(client, InvalidPacket("Invalid Room Code"), DeliveryMethod.ReliableOrdered);
             return;
         }
@@ -219,14 +219,14 @@ class Referrer
     {
         if (client.CurrentRoom == null)
         {
-            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Leave Room Despite not Being in One");
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Leave Room Despite not Being in One");
             Send(client, InvalidPacket("Client Not in Room"), DeliveryMethod.ReliableOrdered);
             return;
         }
 
         if (client.IsHost)
         {
-            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Leave a Room as a Host");
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Leave a Room as a Host");
             Send(client, InvalidPacket("Host Attempted to Leave Room"), DeliveryMethod.ReliableOrdered);
             return;
         }
@@ -238,14 +238,14 @@ class Referrer
     {
         if (client.CurrentRoom == null)
         {
-            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Leave Room Despite not Being in One");
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Leave Room Despite not Being in One");
             Send(client, InvalidPacket("Client Not in Room"), DeliveryMethod.ReliableOrdered);
             return;
         }
 
         if (!client.IsHost)
         {
-            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Close a Room as a Guest");
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Close a Room as a Guest");
             Send(client, InvalidPacket("Guest Attempted to Close Room"), DeliveryMethod.ReliableOrdered);
         }
 
@@ -256,14 +256,14 @@ class Referrer
     {
         if(client.CurrentRoom == null)
         {
-            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Start Room Despite not Being in One");
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Start Room Despite not Being in One");
             Send(client, InvalidPacket("Client Not in Room"), DeliveryMethod.ReliableOrdered);
             return;
         }
 
         if(!client.IsHost)
         {
-            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Start a Room as a Guest");
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Start a Room as a Guest");
             Send(client, InvalidPacket("Guest Attempted to Start Room"), DeliveryMethod.ReliableOrdered);
             return;
         }
