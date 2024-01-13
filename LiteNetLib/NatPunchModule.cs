@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using System.Net.Sockets;
 using LiteNetLib.Utils;
 
 namespace LiteNetLib
@@ -60,21 +58,21 @@ namespace LiteNetLib
 
         class NatIntroduceRequestPacket
         {
-            public IPEndPoint Internal { [Preserve] get; [Preserve] set; }
-            public string Token { [Preserve] get; [Preserve] set; }
+            public IPEndPoint Internal { get; set; }
+            public string Token { get; set; }
         }
 
         class NatIntroduceResponsePacket
         {
-            public IPEndPoint Internal { [Preserve] get; [Preserve] set; }
-            public IPEndPoint External { [Preserve] get; [Preserve] set; }
-            public string Token { [Preserve] get; [Preserve] set; }
+            public IPEndPoint Internal { get; set; }
+            public IPEndPoint External { get; set; }
+            public string Token { get; set; }
         }
 
         class NatPunchPacket
         {
-            public string Token { [Preserve] get; [Preserve] set; }
-            public bool IsExternal { [Preserve] get; [Preserve] set; }
+            public string Token { get; set; }
+            public bool IsExternal { get; set; }
         }
 
         private readonly NetManager _socket;
@@ -113,11 +111,7 @@ namespace LiteNetLib
             _natPunchListener = listener;
         }
 
-        private void Send<
-#if NET5_0_OR_GREATER
-            [DynamicallyAccessedMembers(Trimming.SerializerMemberTypes)]
-#endif
-        T>(T packet, IPEndPoint target) where T : class, new()
+        private void Send<T>(T packet, IPEndPoint target) where T : class, new()
         {
             _cacheWriter.Reset();
             _cacheWriter.Put((byte)PacketProperty.NatMessage);
@@ -179,7 +173,7 @@ namespace LiteNetLib
         {
             //prepare outgoing data
             string networkIp = NetUtils.GetLocalIp(LocalAddrType.IPv4);
-            if (string.IsNullOrEmpty(networkIp) || masterServerEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
+            if (string.IsNullOrEmpty(networkIp))
             {
                 networkIp = NetUtils.GetLocalIp(LocalAddrType.IPv6);
             }

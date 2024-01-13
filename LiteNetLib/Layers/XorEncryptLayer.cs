@@ -35,13 +35,14 @@ namespace LiteNetLib.Layers
             Buffer.BlockCopy(key, 0, _byteKey, 0, key.Length);
         }
 
-        public override void ProcessInboundPacket(ref IPEndPoint endPoint, ref byte[] data, ref int length)
+        public override void ProcessInboundPacket(ref IPEndPoint endPoint, ref byte[] data, ref int offset, ref int length)
         {
             if (_byteKey == null)
                 return;
-            for (int i = 0; i < length; i++)
+            var cur = offset;
+            for (var i = 0; i < length; i++, cur++)
             {
-                data[i] = (byte)(data[i] ^ _byteKey[i % _byteKey.Length]);
+                data[cur] = (byte)(data[cur] ^ _byteKey[i % _byteKey.Length]);
             }
         }
 
@@ -49,8 +50,8 @@ namespace LiteNetLib.Layers
         {
             if (_byteKey == null)
                 return;
-            int cur = offset;
-            for (int i = 0; i < length; i++, cur++)
+            var cur = offset;
+            for (var i = 0; i < length; i++, cur++)
             {
                 data[cur] = (byte)(data[cur] ^ _byteKey[i % _byteKey.Length]);
             }

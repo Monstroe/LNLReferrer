@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace LiteNetLib.Utils
 {
@@ -118,11 +117,7 @@ namespace LiteNetLib.Utils
             ReadPacket(reader, null);
         }
 
-        public void Write<
-#if NET5_0_OR_GREATER
-            [DynamicallyAccessedMembers(Trimming.SerializerMemberTypes)]
-#endif
-        T>(NetDataWriter writer, T packet) where T : class, new()
+        public void Write<T>(NetDataWriter writer, T packet) where T : class, new()
         {
             WriteHash<T>(writer);
             _netSerializer.Serialize(writer, packet);
@@ -151,11 +146,7 @@ namespace LiteNetLib.Utils
         /// <param name="onReceive">event that will be called when packet deserialized with ReadPacket method</param>
         /// <param name="packetConstructor">Method that constructs packet instead of slow Activator.CreateInstance</param>
         /// <exception cref="InvalidTypeException"><typeparamref name="T"/>'s fields are not supported, or it has no fields</exception>
-        public void Subscribe<
-#if NET5_0_OR_GREATER
-            [DynamicallyAccessedMembers(Trimming.SerializerMemberTypes)]
-#endif
-        T>(Action<T> onReceive, Func<T> packetConstructor) where T : class, new()
+        public void Subscribe<T>(Action<T> onReceive, Func<T> packetConstructor) where T : class, new()
         {
             _netSerializer.Register<T>();
             _callbacks[GetHash<T>()] = (reader, userData) =>
@@ -172,11 +163,7 @@ namespace LiteNetLib.Utils
         /// <param name="onReceive">event that will be called when packet deserialized with ReadPacket method</param>
         /// <param name="packetConstructor">Method that constructs packet instead of slow Activator.CreateInstance</param>
         /// <exception cref="InvalidTypeException"><typeparamref name="T"/>'s fields are not supported, or it has no fields</exception>
-        public void Subscribe<
-#if NET5_0_OR_GREATER
-            [DynamicallyAccessedMembers(Trimming.SerializerMemberTypes)]
-#endif
-        T, TUserData>(Action<T, TUserData> onReceive, Func<T> packetConstructor) where T : class, new()
+        public void Subscribe<T, TUserData>(Action<T, TUserData> onReceive, Func<T> packetConstructor) where T : class, new()
         {
             _netSerializer.Register<T>();
             _callbacks[GetHash<T>()] = (reader, userData) =>
@@ -193,11 +180,7 @@ namespace LiteNetLib.Utils
         /// </summary>
         /// <param name="onReceive">event that will be called when packet deserialized with ReadPacket method</param>
         /// <exception cref="InvalidTypeException"><typeparamref name="T"/>'s fields are not supported, or it has no fields</exception>
-        public void SubscribeReusable<
-#if NET5_0_OR_GREATER
-            [DynamicallyAccessedMembers(Trimming.SerializerMemberTypes)]
-#endif
-        T>(Action<T> onReceive) where T : class, new()
+        public void SubscribeReusable<T>(Action<T> onReceive) where T : class, new()
         {
             _netSerializer.Register<T>();
             var reference = new T();
@@ -214,11 +197,7 @@ namespace LiteNetLib.Utils
         /// </summary>
         /// <param name="onReceive">event that will be called when packet deserialized with ReadPacket method</param>
         /// <exception cref="InvalidTypeException"><typeparamref name="T"/>'s fields are not supported, or it has no fields</exception>
-        public void SubscribeReusable<
-#if NET5_0_OR_GREATER
-            [DynamicallyAccessedMembers(Trimming.SerializerMemberTypes)]
-#endif
-        T, TUserData>(Action<T, TUserData> onReceive) where T : class, new()
+        public void SubscribeReusable<T, TUserData>(Action<T, TUserData> onReceive) where T : class, new()
         {
             _netSerializer.Register<T>();
             var reference = new T();
