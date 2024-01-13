@@ -29,7 +29,6 @@ class Referrer
     private Dictionary<int, Room> rooms;
     private Dictionary<string, PacketHandler> packetHandlers;
 
-
     private Referrer()
     {
         listener = new EventBasedNetListener();
@@ -44,6 +43,7 @@ class Referrer
             { "JOINROOM", JoinRoom },
             { "LEAVEROOM", LeaveRoom },
             { "CLOSEROOM", CloseRoom },
+            { "STARTROOM", StartRoom }
         };
     }
 
@@ -133,9 +133,16 @@ class Referrer
 
     public void Send(Client client, string message, DeliveryMethod deliveryMethod)
     {
-        writer.Put(message);
-        client.Peer.Send(writer, deliveryMethod);
-        writer.Reset();
+        try 
+        {
+            writer.Put(message);
+            client.Peer.Send(writer, deliveryMethod);
+            writer.Reset();
+        }
+        catch(SocketException e)
+        {
+            Console.Error.WriteLine("Socket Exception While Sending: " + e.SocketErrorCode.ToString());
+        }
     }
 
     public void Send(List<Client> clients, string message, DeliveryMethod deliveryMethod)
@@ -149,8 +156,8 @@ class Referrer
     public void LeaveRoom(Client client, Room room)
     {
         Console.WriteLine("Client " + client.Peer.ToString() + " Left Room with Code: " + room.ID);
+        Send(room.Members/*GetMembersExcept(client)*/, MemberLeftPacket(client.ID), DeliveryMethod.ReliableOrdered);
         room.Members.Remove(client);
-        Send(room.GetMembersExcept(client), MemberLeftPacket(client.ID), DeliveryMethod.ReliableOrdered);
     }
 
     public void CloseRoom(Room room)
@@ -186,7 +193,7 @@ class Referrer
             client.CurrentRoom = room;
 
             Console.WriteLine("Client " + client.Peer.ToString() + " Joining Room with Code: " + room.ID);
-            foreach (Client member in room.GetMembersExcept(client))
+            foreach (Client member in room.Members)// room.GetMembersExcept(client))
             {
                 Send(member, MemberJoinedPacket(client.ID), DeliveryMethod.ReliableOrdered);
             }
@@ -210,7 +217,7 @@ class Referrer
 
         if (client.IsHost)
         {
-            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Leave a Room as a guest");
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Leave a Room as a Host");
             Send(client, InvalidPacket("Host Attempted to Leave Room"), DeliveryMethod.ReliableOrdered);
             return;
         }
@@ -229,11 +236,31 @@ class Referrer
 
         if (!client.IsHost)
         {
-            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Close a Room as a guest");
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Close a Room as a Guest");
             Send(client, InvalidPacket("Guest Attempted to Close Room"), DeliveryMethod.ReliableOrdered);
         }
 
         CloseRoom(client.CurrentRoom);
+    }
+
+    public void StartRoom(Client client, string message) 
+    {
+        if(client.CurrentRoom == null)
+        {
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Start Room Despite not Being in One");
+            Send(client, InvalidPacket("Client Not in Room"), DeliveryMethod.ReliableOrdered);
+            return;
+        }
+
+        if(!client.IsHost)
+        {
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " Attempted to Start a Room as a Guest");
+            Send(client, InvalidPacket("Guest Attempted to Start Room"), DeliveryMethod.ReliableOrdered);
+            return;
+        }
+
+        Console.WriteLine("Starting Room... With Code: " + client.CurrentRoom.ID);
+        Send(client.CurrentRoom.Members, RoomStartPacket(), DeliveryMethod.ReliableOrdered);
     }
 
     //----------------------------------PACKET BUILDERS----------------------------------//
@@ -248,14 +275,9 @@ class Referrer
         return "ROOMCODE:" + roomCode;
     }
 
-    public string InvalidPacket(string errorMessage)
-    {
-        return "INVALID:" + errorMessage;
-    }
-
     public string MemberJoinedPacket(int memberID)
     {
-        return "MEMBERJOINED:" + memberID;
+        return "MEMBERJOIN:" + memberID;
     }
 
     public string MemberLeftPacket(int memberID)
@@ -266,6 +288,16 @@ class Referrer
     public string RoomClosedPacket()
     {
         return "ROOMCLOSED:ACK";
+    }
+
+    public string RoomStartPacket()
+    {
+        return "ROOMSTART:ACK";
+    }
+
+    public string InvalidPacket(string errorMessage)
+    {
+        return "INVALID:" + errorMessage;
     }
 
     //-----------------------------------------------------------------------------------//
