@@ -10,6 +10,7 @@ public class Client
     public NetPeer Peer { get; set; }
     public Room CurrentRoom { get; set; }
     public bool IsHost { get { return CurrentRoom != null && CurrentRoom.Host == this; } }
+    public bool IsML { get; set; } = false;
 
     public Client(NetPeer peer)
     {
@@ -23,6 +24,8 @@ public class Room
     public List<Client> Members { get; set; }
     public Client Host { get { return Members[0]; } }
     public List<Client> Guests { get { return Members.GetRange(1, Members.Count - 1); } }
+
+    public Client ML { get; set; }
 
     public Room(int id)
     {
@@ -156,11 +159,37 @@ class Referrer
         }
         else
         {
+            // MAGIC LEAP EDITS
+            if(command.ToUpper() == "ML-INIT")
+            {
+                clients[peer.Id].IsML = true;
+                Console.WriteLine("Client " + peer.EndPoint.ToString() + " is a Magic Leap Device");
+                
+                int[] roomCodes = rooms.Keys.ToArray();
+                Room room = rooms[roomCodes[new Random().Next(0, roomCodes.Length)]];
+                while(room.ML != null)
+                {
+                    room = rooms[roomCodes[new Random().Next(0, roomCodes.Length)]];
+                }
+                room.Members.Add(clients[peer.Id]);
+                room.ML = clients[peer.Id];
+                clients[peer.Id].CurrentRoom = room;
+                Send(room.Host, ("ML-JOIN:" + peer.Id), DeliveryMethod.ReliableOrdered);
+            }
+
             if (clients[peer.Id].CurrentRoom != null)
             {
                 if (clients[peer.Id].IsHost)
                 {
                     Send(clients[peer.Id].CurrentRoom.Guests, packet, deliveryMethod);
+                }
+                else if (clients[peer.Id].IsHost && command.Contains("ML-"))
+                {
+                    Send(clients[peer.Id].CurrentRoom.ML, packet, deliveryMethod);
+                }
+                else if(clients[peer.Id].IsML)
+                {
+                    Send(clients[peer.Id].CurrentRoom.Host, packet, deliveryMethod);
                 }
                 else
                 {
