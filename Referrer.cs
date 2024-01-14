@@ -95,7 +95,7 @@ class Referrer
         Console.WriteLine("Starting Referrer...");
         Port = port;
         netManager.Start(Port);
-        
+
         listener.PeerConnectedEvent += OnPeerConnected;
         listener.PeerDisconnectedEvent += OnPeerDisconnected;
         listener.NetworkReceiveEvent += OnNetworkReceive;
@@ -160,21 +160,28 @@ class Referrer
         else
         {
             // MAGIC LEAP EDITS
-            if(command.ToUpper() == "ML-INIT")
+            if (command.ToUpper() == "ML-INIT")
             {
                 clients[peer.Id].IsML = true;
                 Console.WriteLine("Client " + peer.EndPoint.ToString() + " is a Magic Leap Device");
-                
+
                 int[] roomCodes = rooms.Keys.ToArray();
-                Room room = rooms[roomCodes[new Random().Next(0, roomCodes.Length)]];
-                while(room.ML != null)
+                if (roomCodes.Length > 0)
                 {
-                    room = rooms[roomCodes[new Random().Next(0, roomCodes.Length)]];
+                    Room room = rooms[roomCodes[new Random().Next(0, roomCodes.Length)]];
+                    while (room.ML != null)
+                    {
+                        room = rooms[roomCodes[new Random().Next(0, roomCodes.Length)]];
+                    }
+                    room.Members.Add(clients[peer.Id]);
+                    room.ML = clients[peer.Id];
+                    clients[peer.Id].CurrentRoom = room;
+                    Send(room.Host, ("ML-JOIN:" + peer.Id), DeliveryMethod.ReliableOrdered);
                 }
-                room.Members.Add(clients[peer.Id]);
-                room.ML = clients[peer.Id];
-                clients[peer.Id].CurrentRoom = room;
-                Send(room.Host, ("ML-JOIN:" + peer.Id), DeliveryMethod.ReliableOrdered);
+                else
+                {
+                    Console.WriteLine("No Rooms Available");
+                }
             }
 
             if (clients[peer.Id].CurrentRoom != null)
@@ -187,7 +194,7 @@ class Referrer
                 {
                     Send(clients[peer.Id].CurrentRoom.ML, packet, deliveryMethod);
                 }
-                else if(clients[peer.Id].IsML)
+                else if (clients[peer.Id].IsML)
                 {
                     Send(clients[peer.Id].CurrentRoom.Host, packet, deliveryMethod);
                 }
@@ -211,13 +218,13 @@ class Referrer
 
     public void Send(Client client, string message, DeliveryMethod deliveryMethod)
     {
-        try 
+        try
         {
             writer.Put(message);
             client.Peer.Send(writer, deliveryMethod);
             writer.Reset();
         }
-        catch(SocketException e)
+        catch (SocketException e)
         {
             Console.Error.WriteLine("Socket Exception While Sending: " + e.SocketErrorCode.ToString());
         }
@@ -323,16 +330,16 @@ class Referrer
         CloseRoom(client.CurrentRoom);
     }
 
-    public void StartRoom(Client client, string message) 
+    public void StartRoom(Client client, string message)
     {
-        if(client.CurrentRoom == null)
+        if (client.CurrentRoom == null)
         {
             Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Start Room Despite not Being in One");
             Send(client, InvalidPacket("Client Not in Room"), DeliveryMethod.ReliableOrdered);
             return;
         }
 
-        if(!client.IsHost)
+        if (!client.IsHost)
         {
             Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Start a Room as a Guest");
             Send(client, InvalidPacket("Guest Attempted to Start Room"), DeliveryMethod.ReliableOrdered);
