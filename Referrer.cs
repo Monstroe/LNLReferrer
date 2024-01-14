@@ -184,7 +184,7 @@ class Referrer
                 }
             }
 
-            if (clients[peer.Id].CurrentRoom != null)
+            else if (clients[peer.Id].CurrentRoom != null)
             {
                 if (clients[peer.Id].IsHost)
                 {
