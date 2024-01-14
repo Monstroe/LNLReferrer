@@ -4,6 +4,46 @@ using System.Net.Sockets;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
+public class Client
+{
+    public int ID { get { return Peer.Id; } }
+    public NetPeer Peer { get; set; }
+    public Room CurrentRoom { get; set; }
+    public bool IsHost { get { return CurrentRoom != null && CurrentRoom.Host == this; } }
+
+    public Client(NetPeer peer)
+    {
+        Peer = peer;
+    }
+}
+
+public class Room
+{
+    public int ID { get; set; }
+    public List<Client> Members { get; set; }
+    public Client Host { get { return Members[0]; } }
+    public List<Client> Guests { get { return Members.GetRange(1, Members.Count - 1); } }
+
+    public Room(int id)
+    {
+        ID = id;
+        Members = new List<Client>();
+    }
+
+    public List<Client> GetMembersExcept(Client clientToExclude)
+    {
+        List<Client> membersExcluding = new List<Client>();
+        foreach (Client member in Members)
+        {
+            if (member != clientToExclude)
+            {
+                membersExcluding.Add(member);
+            }
+        }
+        return membersExcluding;
+    }
+}
+
 class Referrer
 {
     private static Referrer instance;
@@ -165,7 +205,7 @@ class Referrer
     public void LeaveRoom(Client client, Room room)
     {
         Console.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Left Room with Code: " + room.ID);
-        Send(room.Members/*GetMembersExcept(client)*/, MemberLeftPacket(client.ID), DeliveryMethod.ReliableOrdered);
+        Send(room.Members, MemberLeftPacket(client.ID), DeliveryMethod.ReliableOrdered);
         room.Members.Remove(client);
     }
 
@@ -202,7 +242,7 @@ class Referrer
             client.CurrentRoom = room;
 
             Console.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Joining Room with Code: " + room.ID);
-            foreach (Client member in room.Members)// room.GetMembersExcept(client))
+            foreach (Client member in room.Members)
             {
                 Send(member, MemberJoinedPacket(client.ID), DeliveryMethod.ReliableOrdered);
             }
@@ -338,45 +378,5 @@ class Referrer
     static void Main(string[] args)
     {
         Referrer.Instance.Start(7777);
-    }
-}
-
-public class Client
-{
-    public int ID { get { return Peer.Id; } }
-    public NetPeer Peer { get; set; }
-    public Room CurrentRoom { get; set; }
-    public bool IsHost { get { return CurrentRoom != null && CurrentRoom.Host == this; } }
-
-    public Client(NetPeer peer)
-    {
-        Peer = peer;
-    }
-}
-
-public class Room
-{
-    public int ID { get; set; }
-    public List<Client> Members { get; set; }
-    public Client Host { get { return Members[0]; } }
-    public List<Client> Guests { get { return Members.GetRange(1, Members.Count - 1); } }
-
-    public Room(int id)
-    {
-        ID = id;
-        Members = new List<Client>();
-    }
-
-    public List<Client> GetMembersExcept(Client clientToExclude)
-    {
-        List<Client> membersExcluding = new List<Client>();
-        foreach (Client member in Members)
-        {
-            if (member != clientToExclude)
-            {
-                membersExcluding.Add(member);
-            }
-        }
-        return membersExcluding;
     }
 }
