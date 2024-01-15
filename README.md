@@ -18,7 +18,7 @@ A simple C# referrer that can be used for creating lobbies/rooms for online mult
   ```
   sudo apt install dotnet-sdk-7.0
   git clone https://github.com/Monstroe/Referrer-LiteNetLib.git
-  cd LNLReferrer
+  cd Referrer-LiteNetLib
   dotnet run
   ```
 ## Version History
