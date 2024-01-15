@@ -69,6 +69,8 @@ class Referrer
     private Dictionary<int, Room> rooms;
     private Dictionary<string, PacketHandler> packetHandlers;
 
+    private bool running;
+
     private Referrer()
     {
         listener = new EventBasedNetListener();
@@ -85,6 +87,8 @@ class Referrer
             { "STARTROOM", StartRoom },
             { "CLOSEROOM", CloseRoom }
         };
+
+        running = false;
     }
 
     public void Start(int port)
@@ -99,11 +103,27 @@ class Referrer
         listener.NetworkReceiveEvent += OnNetworkReceive;
         listener.ConnectionRequestEvent += OnConnectionRequest;
 
-        while (true)
+        running = true;
+
+        while (running)
         {
             netManager.PollEvents();
             Thread.Sleep(15);
         }
+
+        Close();
+    }
+
+    public void Stop() 
+    {
+        running = false;
+    }
+
+    public void Close() 
+    {
+        Console.WriteLine("Closing Referrer...");
+        netManager.DisconnectAll();
+        netManager.Stop();
     }
 
     private void OnPeerConnected(NetPeer peer)
