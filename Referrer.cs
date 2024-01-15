@@ -95,8 +95,8 @@ class Referrer
         
         listener.PeerConnectedEvent += OnPeerConnected;
         listener.PeerDisconnectedEvent += OnPeerDisconnected;
-        listener.NetworkReceiveEvent += OnNetworkReceive;
         listener.NetworkErrorEvent += OnNetworkError;
+        listener.NetworkReceiveEvent += OnNetworkReceive;
         listener.ConnectionRequestEvent += OnConnectionRequest;
 
         while (true)
@@ -106,7 +106,7 @@ class Referrer
         }
     }
 
-    public void OnPeerConnected(NetPeer peer)
+    private void OnPeerConnected(NetPeer peer)
     {
         clients.Add(peer.Id, new Client(peer));
         Send(clients[peer.Id], IDPacket(peer.Id), DeliveryMethod.ReliableOrdered);
@@ -114,7 +114,7 @@ class Referrer
         Console.WriteLine("Number of Clients Online: " + clients.Count);
     }
 
-    public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
+    private void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
         Console.WriteLine("Client " + peer.EndPoint.ToString() + " Disconnected: " + disconnectInfo.Reason.ToString());
 
@@ -134,12 +134,12 @@ class Referrer
         Console.WriteLine("Number of Clients Online: " + clients.Count);
     }
 
-    public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
+    private void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
     {
         Console.Error.WriteLine("Network Error from " + endPoint + ": " + socketError.ToString());
     }
 
-    public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
+    private void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
     {
         string packet = reader.GetString();
         string command = packet.Split(':')[0];
@@ -174,7 +174,7 @@ class Referrer
         }
     }
 
-    public void OnConnectionRequest(ConnectionRequest request)
+    private void OnConnectionRequest(ConnectionRequest request)
     {
         Console.WriteLine("Connection Request from " + request.RemoteEndPoint);
         request.AcceptIfKey("Bruh-Wizz-ArcGIS");
@@ -222,7 +222,7 @@ class Referrer
 
     //----------------------------------PACKET HANDLERS----------------------------------//
 
-    public void CreateRoom(Client client, string message)
+    private void CreateRoom(Client client, string message)
     {
         Room room = new Room(GenerateRoomID());
         room.Members.Add(client);
@@ -233,9 +233,16 @@ class Referrer
         Send(client, RoomCodePacket(room.ID), DeliveryMethod.ReliableOrdered);
     }
 
-    public void JoinRoom(Client client, string message)
+    private void JoinRoom(Client client, string message)
     {
-        if (int.TryParse(message, out int roomID))
+        if(client.CurrentRoom != null)
+        {
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Join a Room Despite Already Being in One");
+            Send(client, InvalidPacket("Client Already in Room"), DeliveryMethod.ReliableOrdered);
+            return;
+        }
+
+        if (int.TryParse(message, out int roomID) && rooms.ContainsKey(roomID))
         {
             Room room = rooms[roomID];
             room.Members.Add(client);
@@ -253,15 +260,14 @@ class Referrer
         {
             Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Sent Invalid Room Code: " + roomID);
             Send(client, InvalidPacket("Invalid Room Code"), DeliveryMethod.ReliableOrdered);
-            return;
         }
     }
 
-    public void LeaveRoom(Client client, string message)
+    private void LeaveRoom(Client client, string message)
     {
         if (client.CurrentRoom == null)
         {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Leave Room Despite not Being in One");
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Leave a Room Despite not Being in One");
             Send(client, InvalidPacket("Client Not in Room"), DeliveryMethod.ReliableOrdered);
             return;
         }
@@ -276,29 +282,11 @@ class Referrer
         LeaveRoom(client, client.CurrentRoom);
     }
 
-    public void CloseRoom(Client client, string message)
-    {
-        if (client.CurrentRoom == null)
-        {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Leave Room Despite not Being in One");
-            Send(client, InvalidPacket("Client Not in Room"), DeliveryMethod.ReliableOrdered);
-            return;
-        }
-
-        if (!client.IsHost)
-        {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Close a Room as a Guest");
-            Send(client, InvalidPacket("Guest Attempted to Close Room"), DeliveryMethod.ReliableOrdered);
-        }
-
-        CloseRoom(client.CurrentRoom);
-    }
-
-    public void StartRoom(Client client, string message) 
+    private void StartRoom(Client client, string message) 
     {
         if(client.CurrentRoom == null)
         {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Start Room Despite not Being in One");
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Start a Room Despite not Being in One");
             Send(client, InvalidPacket("Client Not in Room"), DeliveryMethod.ReliableOrdered);
             return;
         }
@@ -312,6 +300,24 @@ class Referrer
 
         Console.WriteLine("Starting Room... With Code: " + client.CurrentRoom.ID);
         Send(client.CurrentRoom.Members, RoomStartPacket(), DeliveryMethod.ReliableOrdered);
+    }
+
+    private void CloseRoom(Client client, string message)
+    {
+        if (client.CurrentRoom == null)
+        {
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Leave a Room Despite not Being in One");
+            Send(client, InvalidPacket("Client Not in Room"), DeliveryMethod.ReliableOrdered);
+            return;
+        }
+
+        if (!client.IsHost)
+        {
+            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " Attempted to Close a Room as a Guest");
+            Send(client, InvalidPacket("Guest Attempted to Close Room"), DeliveryMethod.ReliableOrdered);
+        }
+
+        CloseRoom(client.CurrentRoom);
     }
 
     //----------------------------------PACKET BUILDERS----------------------------------//
