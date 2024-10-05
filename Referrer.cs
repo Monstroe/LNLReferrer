@@ -123,19 +123,28 @@ class Referrer
 
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
     {
-        byte[] data = reader.GetRemainingBytes();
+        byte[] data = new byte[reader.AvailableBytes];
+        reader.GetBytes(data, reader.AvailableBytes);
         Packet packet = new Packet(data);
 
-        if (packet.Length < 2)
+        if (packet.Length < (sizeof(short) + sizeof(short)))
         {
-            Console.Error.WriteLine("Invalid Packet Received from " + peer.ToString());
+            Console.Error.WriteLine("Client " + peer.ToString() + " sent too short of a packet");
             return;
         }
 
-        ServiceReceiveType command = (ServiceReceiveType)packet.ReadShort();
-        if (packetHandlers.TryGetValue(command, out PacketHandler? handler))
+        // Check if the packet is a command packet (they all start with 0)
+        if (packet.ReadShort() == 0)
         {
-            handler(Clients[peer], packet);
+            ServiceReceiveType command = (ServiceReceiveType)packet.ReadShort();
+            if (packetHandlers.TryGetValue(command, out PacketHandler? handler))
+            {
+                handler(Clients[peer], packet);
+            }
+            else
+            {
+                Console.Error.WriteLine("Invalid Command Received from " + peer.ToString());
+            }
         }
         else
         {
@@ -166,6 +175,8 @@ class Referrer
     {
         try
         {
+            // Insert the command key at the start of the packet
+            packet.InsertAtStart((short)0);
             client.Peer.Send(packet.ByteArray, method);
         }
         catch (SocketException e)

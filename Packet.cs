@@ -462,7 +462,7 @@ public class Packet
 
     public string ReadString(bool moveIndexPosition = true)
     {
-        int strLen = ReadInt();
+        int strLen = ReadInt(false);
         var value = Encoding.UTF8.GetString(byteList.GetRange(CurrentIndex + 4, strLen).ToArray());
         CurrentIndex += moveIndexPosition ? strLen + 4 : 0;
         return value;
