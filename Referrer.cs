@@ -177,9 +177,11 @@ class Referrer
     {
         try
         {
-            Console.WriteLine("Sending Packet to " + client.Peer.ToString() + " of type " + packet.ReadShort(false));
-            // Insert the command key at the start of the packet
-            packet.InsertAtStart((short)0);
+            if (packet.ReadShort(false) == 0)
+            {
+                Console.WriteLine("Sending Packet to " + client.Peer.ToString() + " of type " + (ServiceSendType)packet.ReadShort(false));
+            }
+
             client.Peer.Send(packet.ByteArray, method);
         }
         catch (SocketException e)
@@ -188,9 +190,9 @@ class Referrer
         }
     }
 
-    public void Send(List<Client> Clients, Packet packet, DeliveryMethod method)
+    public void Send(List<Client> clients, Packet packet, DeliveryMethod method)
     {
-        foreach (Client client in Clients)
+        foreach (Client client in clients)
         {
             Send(client, packet, method);
         }
