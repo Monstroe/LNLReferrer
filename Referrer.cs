@@ -179,7 +179,9 @@ class Referrer
         {
             if (packet.ReadShort(false) == 0)
             {
+                packet.CurrentIndex += 2;
                 Console.WriteLine("Sending Packet to " + client.Peer.ToString() + " of type " + (ServiceSendType)packet.ReadShort(false));
+                packet.CurrentIndex = 0;
             }
 
             client.Peer.Send(packet.ByteArray, method);
