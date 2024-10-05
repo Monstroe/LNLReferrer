@@ -60,7 +60,7 @@ class Referrer
         listener.NetworkReceiveEvent += OnNetworkReceive;
         listener.NetworkErrorEvent += OnNetworkError;
 
-        while (running)
+        while (running && !Console.KeyAvailable)
         {
             NetManager.PollEvents();
             Thread.Sleep(POLL_RATE);
