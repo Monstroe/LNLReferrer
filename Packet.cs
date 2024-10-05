@@ -93,21 +93,6 @@ public class Packet
         byteList.InsertRange(sizeof(int), Encoding.UTF8.GetBytes(value));
     }
 
-    // Unity Addons
-    public void InsertAtStart(Vector3 value)
-    {
-        InsertAtStart(value.z);
-        InsertAtStart(value.y);
-        InsertAtStart(value.x);
-    }
-    public void InsertAtStart(Quaternion value)
-    {
-        InsertAtStart(value.w);
-        InsertAtStart(value.z);
-        InsertAtStart(value.y);
-        InsertAtStart(value.x);
-    }
-
     public void Write(byte value) { byteList.Add(value); }
     private void WriteInternal(byte[] value) { byteList.AddRange(value); }
     public void Write(byte[] value)
