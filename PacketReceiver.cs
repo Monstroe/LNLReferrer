@@ -13,7 +13,7 @@ public class PacketReceiver
         client.CurrentRoom = room;
         Referrer.Instance.Rooms.Add(room.ID, room);
 
-        Console.WriteLine("Creating Room... New room code for client " + client.Peer.EndPoint.ToString() + ": " + room.ID);
+        Console.WriteLine("Creating Room... New room code for client " + client.Peer.ToString() + ": " + room.ID);
         PacketSender.Instance.RoomCode(client, room.ID);
     }
 
@@ -21,7 +21,7 @@ public class PacketReceiver
     {
         if (client.CurrentRoom != null)
         {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " attempted to join a room despite already being in one");
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " attempted to join a room despite already being in one");
             PacketSender.Instance.Invalid(client, "Client already in room");
             return;
         }
@@ -32,14 +32,14 @@ public class PacketReceiver
             room.Members.Add(client);
             client.CurrentRoom = room;
 
-            Console.WriteLine("Client " + client.Peer.EndPoint.ToString() + " joining room with code: " + room.ID);
+            Console.WriteLine("Client " + client.Peer.ToString() + " joining room with code: " + room.ID);
 
             PacketSender.Instance.MemberJoined(room.Members, client.ID);
             PacketSender.Instance.RoomMembers(client, room.Members);
         }
         else
         {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " sent invalid room code: " + roomID);
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " sent invalid room code: " + roomID);
             PacketSender.Instance.Invalid(client, "Invalid room code");
         }
     }
@@ -48,14 +48,14 @@ public class PacketReceiver
     {
         if (client.CurrentRoom == null)
         {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " attempted to leave a room despite not being in one");
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " attempted to leave a room despite not being in one");
             PacketSender.Instance.Invalid(client, "Client not in room");
             return;
         }
 
         if (client.IsHost)
         {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " attempted to leave a room as a host");
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " attempted to leave a room as a host");
             PacketSender.Instance.Invalid(client, "Host attempted to leave room");
             return;
         }
@@ -67,14 +67,14 @@ public class PacketReceiver
     {
         if (client.CurrentRoom == null)
         {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " attempted to start a room despite not being in one");
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " attempted to start a room despite not being in one");
             PacketSender.Instance.Invalid(client, "Client not in room");
             return;
         }
 
         if (!client.IsHost)
         {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " attempted to start a room as a guest");
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " attempted to start a room as a guest");
             PacketSender.Instance.Invalid(client, "Guest attempted to start room");
             return;
         }
@@ -87,14 +87,14 @@ public class PacketReceiver
     {
         if (client.CurrentRoom == null)
         {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " attempted to leave a room despite not being in one");
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " attempted to leave a room despite not being in one");
             PacketSender.Instance.Invalid(client, "Client not in room");
             return;
         }
 
         if (!client.IsHost)
         {
-            Console.Error.WriteLine("Client " + client.Peer.EndPoint.ToString() + " attempted to close a room as a guest");
+            Console.Error.WriteLine("Client " + client.Peer.ToString() + " attempted to close a room as a guest");
             PacketSender.Instance.Invalid(client, "Guest attempted to close room");
         }
 

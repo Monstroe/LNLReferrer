@@ -73,12 +73,12 @@ class Referrer
         Close();
     }
 
-    public void Stop() 
+    public void Stop()
     {
         running = false;
     }
 
-    public void Close() 
+    public void Close()
     {
         Console.WriteLine("Closing Referrer...");
         NetManager.DisconnectAll();
@@ -93,7 +93,7 @@ class Referrer
 
     public void OnPeerConnected(NetPeer peer)
     {
-        Console.WriteLine("Client " + peer.EndPoint.ToString() + " Connected");
+        Console.WriteLine("Client " + peer.ToString() + " Connected");
         var client = new Client(Guid.NewGuid(), peer);
         Clients.Add(peer, client);
         PacketSender.Instance.ID(client, client.ID);
@@ -102,7 +102,7 @@ class Referrer
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
-        Console.WriteLine("Client " + peer.EndPoint.ToString() + " Disconnected: " + disconnectInfo.Reason.ToString());
+        Console.WriteLine("Client " + peer.ToString() + " Disconnected: " + disconnectInfo.Reason.ToString());
 
         if (Clients.ContainsKey(peer))
         {
@@ -132,7 +132,7 @@ class Referrer
 
         if (packet.Length < 2)
         {
-            Console.Error.WriteLine("Invalid Packet Received from " + peer.EndPoint.ToString());
+            Console.Error.WriteLine("Invalid Packet Received from " + peer.ToString());
             return;
         }
 
@@ -156,7 +156,7 @@ class Referrer
             }
             else
             {
-                Console.Error.WriteLine("Client " + peer.EndPoint.ToString() + " sent invalid packet");
+                Console.Error.WriteLine("Client " + peer.ToString() + " sent invalid packet");
             }
         }
     }
@@ -188,7 +188,7 @@ class Referrer
 
     public void LeaveRoom(Client client, Room room)
     {
-        Console.WriteLine("Client " + client.Peer.EndPoint.ToString() + " left room with code: " + room.ID);
+        Console.WriteLine("Client " + client.Peer.ToString() + " left room with code: " + room.ID);
         PacketSender.Instance.MemberLeft(client, client.ID);
         room.Members.Remove(client);
     }

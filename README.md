@@ -6,8 +6,8 @@ A simple C# referrer that can be used for creating lobbies/rooms for online mult
 
 ### Dependencies
 
-* [LiteNetLib](https://github.com/RevenantX/LiteNetLib) ([1.1.0](https://github.com/RevenantX/LiteNetLib/releases/tag/v1.1.0))
-* .NET 7
+* [LiteNetLib](https://github.com/RevenantX/LiteNetLib) ([1.2.0](https://github.com/RevenantX/LiteNetLib/releases/tag/v1.2.0))
+* .NET 8.0
 
 ### Installing and Executing Program
 

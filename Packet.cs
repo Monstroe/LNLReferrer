@@ -42,13 +42,13 @@ public class Packet
 
     private List<byte> byteList;
 
-    public NetPacket()
+    public Packet()
     {
         CurrentIndex = 0;
         byteList = new List<byte>();
     }
 
-    public NetPacket(byte[] data) : this()
+    public Packet(byte[] data) : this()
     {
         Write(data);
     }
@@ -289,7 +289,7 @@ public class Packet
         return value;
     }
 
-    public bool ReadBools(bool moveIndexPosition = true)
+    public bool[] ReadBools(bool moveIndexPosition = true)
     {
         int length = ReadInt();
         int typeSize = length * sizeof(bool) + sizeof(int);
