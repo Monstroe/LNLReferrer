@@ -154,16 +154,12 @@ class Referrer
             {
                 if (Clients[peer].IsHost)
                 {
-                    packet.CurrentIndex += 2;
                     Console.WriteLine("Sendng packet of type " + (ServiceSendType)packet.ReadShort(false) + " to guests");
-                    packet.CurrentIndex = 0;
                     Send(Clients[peer].CurrentRoom.Guests, packet, deliveryMethod);
                 }
                 else
                 {
-                    packet.CurrentIndex += 2;
                     Console.WriteLine("Sending packet of type " + (ServiceSendType)packet.ReadShort(false) + " to host");
-                    packet.CurrentIndex = 0;
                     Send(Clients[peer].CurrentRoom.Host, packet, deliveryMethod);
                 }
             }
