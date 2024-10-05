@@ -14,9 +14,9 @@ public enum ServiceSendType
 
 public enum ServiceReceiveType
 {
-    CreateRoom,
-    JoinRoom,
-    LeaveRoom,
-    StartRoom,
-    CloseRoom
+    CreateRoom = 0,
+    JoinRoom = 1,
+    LeaveRoom = 2,
+    StartRoom = 3,
+    CloseRoom = 4
 }

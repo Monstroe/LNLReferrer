@@ -126,6 +126,7 @@ class Referrer
         byte[] data = new byte[reader.AvailableBytes];
         reader.GetBytes(data, reader.AvailableBytes);
         Packet packet = new Packet(data);
+        int length = packet.ReadInt();
 
         if (packet.Length < (sizeof(short) + sizeof(short)))
         {
@@ -139,6 +140,7 @@ class Referrer
             ServiceReceiveType command = (ServiceReceiveType)packet.ReadShort();
             if (packetHandlers.TryGetValue(command, out PacketHandler? handler))
             {
+                Console.WriteLine("Received Command: " + command.ToString() + " from " + peer.ToString());
                 handler(Clients[peer], packet);
             }
             else
