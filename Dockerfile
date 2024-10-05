@@ -1,5 +1,5 @@
 # Use the official .NET 8 SDK as a build stage
-FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN dotnet publish -c Release -o out
 
 
 # Use the official .NET 8 runtime as a base for the final image
-FROM mcr.microsoft.com/dotnet/runtime:7.0 AS runtime
+FROM mcr.microsoft.com/dotnet/runtime:8.0 AS runtime
 
 WORKDIR /app
 
