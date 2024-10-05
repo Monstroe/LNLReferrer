@@ -154,12 +154,12 @@ class Referrer
             {
                 if (Clients[peer].IsHost)
                 {
-                    Console.WriteLine("Sendng packet of type " + (ServiceSendType)packet.ReadShort(false) + " to guests");
+                    Console.WriteLine("Sendng packet of type " + packet.ReadShort(false) + " to guests");
                     Send(Clients[peer].CurrentRoom.Guests, packet, deliveryMethod);
                 }
                 else
                 {
-                    Console.WriteLine("Sending packet of type " + (ServiceSendType)packet.ReadShort(false) + " to host");
+                    Console.WriteLine("Sending packet of type " + packet.ReadShort(false) + " to host");
                     Send(Clients[peer].CurrentRoom.Host, packet, deliveryMethod);
                 }
             }
