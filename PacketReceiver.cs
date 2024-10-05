@@ -29,13 +29,13 @@ public class PacketReceiver
         int roomID = packet.ReadInt();
         if (Referrer.Instance.Rooms.TryGetValue(roomID, out Room? room))
         {
+            PacketSender.Instance.MemberJoined(room.Members, client.ID);
+            PacketSender.Instance.RoomMembers(client, room.Members);
+
             room.Members.Add(client);
             client.CurrentRoom = room;
 
             Console.WriteLine("Client " + client.Peer.ToString() + " joining room with code: " + room.ID);
-
-            PacketSender.Instance.MemberJoined(room.Members, client.ID);
-            PacketSender.Instance.RoomMembers(client, room.Members);
         }
         else
         {
