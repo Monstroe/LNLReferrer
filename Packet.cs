@@ -65,17 +65,6 @@ public class Packet
         CurrentIndex = CurrentIndex > offset ? CurrentIndex - count : CurrentIndex;
     }
 
-    public void InsertLength()
-    {
-        InsertLength(0);
-    }
-
-    public void InsertLength(int offset)
-    {
-        int length = byteList.Count - offset;
-        byteList.InsertRange(offset, ToProperEndian(BitConverter.GetBytes(length)));
-    }
-
     public void InsertAtStart(byte value) { byteList.Insert(0, value); }
     public void InsertAtStart(bool value) { byteList.InsertRange(0, ToProperEndian(BitConverter.GetBytes(value))); }
     public void InsertAtStart(char value) { byteList.InsertRange(0, ToProperEndian(BitConverter.GetBytes(value))); }

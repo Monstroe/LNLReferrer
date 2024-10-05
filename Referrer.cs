@@ -15,7 +15,6 @@ class Referrer
 
     public delegate void PacketHandler(Client client, Packet packet);
 
-    public string Address { get; set; }
     public int Port { get; set; }
     public string ConnectionKey { get; set; }
 
@@ -25,14 +24,12 @@ class Referrer
 
     private EventBasedNetListener listener;
     private Dictionary<ServiceReceiveType, PacketHandler> packetHandlers;
-    private NetDataWriter writer;
     private bool running;
 
     private Referrer()
     {
         listener = new EventBasedNetListener();
         NetManager = new NetManager(listener);
-        writer = new NetDataWriter();
 
         Clients = new Dictionary<NetPeer, Client>();
         Rooms = new Dictionary<int, Room>();
@@ -48,10 +45,9 @@ class Referrer
         running = false;
     }
 
-    public void Start(string address, int port, string connectionKey)
+    public void Start(int port, string connectionKey)
     {
         Console.WriteLine("Starting Referrer...");
-        Address = address;
         Port = port;
         ConnectionKey = connectionKey;
         NetManager.Start(Port);
@@ -61,8 +57,8 @@ class Referrer
         listener.ConnectionRequestEvent += OnConnectionRequest;
         listener.PeerConnectedEvent += OnPeerConnected;
         listener.PeerDisconnectedEvent += OnPeerDisconnected;
-        listener.NetworkErrorEvent += OnNetworkError;
         listener.NetworkReceiveEvent += OnNetworkReceive;
+        listener.NetworkErrorEvent += OnNetworkError;
 
         while (running)
         {
@@ -217,19 +213,18 @@ class Referrer
 
     static void Main(string[] args)
     {
-        if (args.Length != 3)
+        if (args.Length != 2)
         {
-            Console.Error.WriteLine("Usage: Referrer <address> <port> <connectionKey>");
+            Console.Error.WriteLine("Usage: Referrer <port> <connectionKey>");
             return;
         }
 
-        string address = args[0];
-        string connectionKey = args[2];
-        if (int.TryParse(args[1], out int port))
+        string connectionKey = args[1];
+        if (int.TryParse(args[0], out int port))
         {
-            Console.WriteLine("Passed Address: " + address + ":" + port);
+            Console.WriteLine("Passed Port: " + port);
             Console.WriteLine("Passed Connection Key: " + connectionKey + "\n");
-            Referrer.Instance.Start(address, port, connectionKey);
+            Referrer.Instance.Start(port, connectionKey);
         }
         else
         {

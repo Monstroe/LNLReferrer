@@ -7,4 +7,4 @@ services:
     restart: unless-stopped
     ports:
       - 7777:7777
-    command: ["127.0.0.1", "7777", "MyConnectionKey"] # Change this to your server's IP, port, and connection key
+    command: ["7777", "MyConnectionKey"] # Change this to your server's port and connection key
