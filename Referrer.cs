@@ -50,7 +50,7 @@ class Referrer
         Console.WriteLine("Starting Referrer...");
         Port = port;
         ConnectionKey = connectionKey;
-        NetManager.Start(Port);
+        NetManager.Start(IPAddress.Any, IPAddress.IPv6Any, port);
         running = true;
         Console.WriteLine("Referrer Started, waiting for connections...");
 
