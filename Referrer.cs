@@ -177,6 +177,7 @@ class Referrer
     {
         try
         {
+            Console.WriteLine("Sending Packet to " + client.Peer.ToString() + " of type " + packet.ReadShort(false));
             // Insert the command key at the start of the packet
             packet.InsertAtStart((short)0);
             client.Peer.Send(packet.ByteArray, method);
