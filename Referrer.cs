@@ -126,6 +126,7 @@ class Referrer
         byte[] data = new byte[reader.AvailableBytes];
         reader.GetBytes(data, reader.AvailableBytes);
         Packet packet = new Packet(data);
+        // Why this has to exist, I don't know. But it needs to be here (this is why CNet is better).
         int length = packet.ReadInt();
 
         if (packet.Length < (sizeof(short) + sizeof(short)))
@@ -153,6 +154,7 @@ class Referrer
             if (Clients[peer].CurrentRoom != null)
             {
                 packet.CurrentIndex -= 2;
+                // Need to remove the length of the packet from the start of the packet, because it will get re-inserted when sending
                 packet.Remove(0, sizeof(int));
 
                 if (Clients[peer].IsHost)
@@ -185,8 +187,8 @@ class Referrer
             if (packet.ReadShort(false) == 0)
             {
                 packet.CurrentIndex += 2;
-                Console.WriteLine("Sending Packet to " + client.Peer.ToString() + " of type " + (ServiceSendType)packet.ReadShort(false));
-                packet.CurrentIndex = 0;
+                Console.WriteLine("Sending Command Packet to " + client.Peer.ToString() + " of type " + (ServiceSendType)packet.ReadShort(false));
+                packet.CurrentIndex -= 2;
             }
 
             client.Peer.Send(packet.ByteArray, method);
