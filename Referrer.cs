@@ -152,6 +152,7 @@ class Referrer
         {
             if (Clients[peer].CurrentRoom != null)
             {
+                packet.CurrentIndex -= 2;
                 if (Clients[peer].IsHost)
                 {
                     Console.WriteLine("Sendng packet of type " + packet.ReadShort(false) + " to guests");
