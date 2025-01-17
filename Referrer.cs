@@ -2,7 +2,6 @@
 using System.Net;
 using System.Net.Sockets;
 using LiteNetLib;
-using LiteNetLib.Utils;
 
 namespace LiteNetLib_Referrer;
 
@@ -13,7 +12,7 @@ class Referrer
     public const int POLL_RATE = 15;
     public const int MAX_ROOM_AMOUNT = 10000;
 
-    public delegate void PacketHandler(Client client, Packet packet);
+    public delegate void PacketHandler(Client client, NetPacket packet);
 
     public int Port { get; set; }
     public string ConnectionKey { get; set; }
@@ -35,6 +34,7 @@ class Referrer
         Rooms = new Dictionary<int, Room>();
         packetHandlers = new Dictionary<ServiceReceiveType, PacketHandler>()
         {
+            { ServiceReceiveType.Name, PacketReceiver.Instance.Name },
             { ServiceReceiveType.CreateRoom, PacketReceiver.Instance.CreateRoom },
             { ServiceReceiveType.JoinRoom, PacketReceiver.Instance.JoinRoom },
             { ServiceReceiveType.LeaveRoom, PacketReceiver.Instance.LeaveRoom },
@@ -125,20 +125,12 @@ class Referrer
     {
         byte[] data = new byte[reader.AvailableBytes];
         reader.GetBytes(data, reader.AvailableBytes);
-        Packet packet = new Packet(data);
-        // Why this has to exist, I don't know. But it needs to be here (this is why CNet is better).
-        int length = packet.ReadInt();
-
-        if (packet.Length < (sizeof(short) + sizeof(short)))
-        {
-            Console.Error.WriteLine("Client " + peer.ToString() + " sent too short of a packet");
-            return;
-        }
+        NetPacket packet = new NetPacket(data);
 
         // Check if the packet is a command packet (they all start with 0)
-        if (packet.ReadShort() == 0)
+        if (packet.ReadByte() == 0)
         {
-            ServiceReceiveType command = (ServiceReceiveType)packet.ReadShort();
+            ServiceReceiveType command = (ServiceReceiveType)(int)packet.ReadByte();
             if (packetHandlers.TryGetValue(command, out PacketHandler? handler))
             {
                 Console.WriteLine("Received Command: " + command.ToString() + " from " + peer.ToString());
@@ -153,18 +145,16 @@ class Referrer
         {
             if (Clients[peer].CurrentRoom != null)
             {
-                packet.CurrentIndex -= 2;
-                // Need to remove the length of the packet from the start of the packet, because it will get re-inserted when sending
-                packet.Remove(0, sizeof(int));
+                packet.CurrentIndex -= 1;
 
                 if (Clients[peer].IsHost)
                 {
-                    Console.WriteLine("Sendng packet of type " + packet.ReadShort(false) + " to guests");
+                    Console.WriteLine("Sendng packet of type " + (int)packet.ReadByte(false) + " to guests");
                     Send(Clients[peer].CurrentRoom.Guests, packet, deliveryMethod);
                 }
                 else
                 {
-                    Console.WriteLine("Sending packet of type " + packet.ReadShort(false) + " to host");
+                    Console.WriteLine("Sending packet of type " + (int)packet.ReadByte(false) + " to host");
                     Send(Clients[peer].CurrentRoom.Host, packet, deliveryMethod);
                 }
             }
@@ -180,18 +170,16 @@ class Referrer
         Console.Error.WriteLine("Network Error from " + endPoint + ": " + socketError.ToString());
     }
 
-    public void Send(Client client, Packet packet, DeliveryMethod method)
+    public void Send(Client client, NetPacket packet, DeliveryMethod method)
     {
         try
         {
-            if (packet.ReadShort(false) == 0)
+            if (packet.ReadByte() == 0)
             {
-                packet.CurrentIndex += 2;
-                Console.WriteLine("Sending Command Packet to " + client.Peer.ToString() + " of type " + (ServiceSendType)packet.ReadShort(false));
-                packet.CurrentIndex -= 2;
+                Console.WriteLine("Sending Command NetPacket to " + client.RemotePeer.ToString() + " of type " + (ServiceSendType)(int)packet.ReadByte(false));
             }
 
-            client.Peer.Send(packet.ByteArray, method);
+            client.RemotePeer.Send(packet.ByteArray, method);
         }
         catch (SocketException e)
         {
@@ -199,7 +187,7 @@ class Referrer
         }
     }
 
-    public void Send(List<Client> clients, Packet packet, DeliveryMethod method)
+    public void Send(List<Client> clients, NetPacket packet, DeliveryMethod method)
     {
         foreach (Client client in clients)
         {
@@ -209,9 +197,10 @@ class Referrer
 
     public void LeaveRoom(Client client, Room room)
     {
-        Console.WriteLine("Client " + client.Peer.ToString() + " left room with code: " + room.ID);
-        PacketSender.Instance.MemberLeft(client, client.ID);
+        Console.WriteLine("Client " + client.RemotePeer.ToString() + " left room with code: " + room.ID);
+        PacketSender.Instance.MemberLeft(room.Members, client);
         room.Members.Remove(client);
+        client.CurrentRoom = null;
     }
 
     public void CloseRoom(Room room)
@@ -240,7 +229,7 @@ class Referrer
     {
         if (args.Length != 2)
         {
-            Console.Error.WriteLine("Usage: Referrer <port> <connectionKey>");
+            Console.Error.WriteLine("Usage: dotnet run <port> <connectionKey>");
             return;
         }
 

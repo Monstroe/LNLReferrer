@@ -6,7 +6,7 @@ A simple C# referrer that can be used for creating lobbies/rooms for online mult
 
 ### Dependencies
 
-* [LiteNetLib](https://github.com/RevenantX/LiteNetLib) ([1.2.0](https://github.com/RevenantX/LiteNetLib/releases/tag/v1.2.0))
+* [LiteNetLib](https://github.com/RevenantX/LiteNetLib) ([1.3.1](https://github.com/RevenantX/LiteNetLib/releases/tag/1.3.1))
 * .NET 8.0
 
 ### Installing and Executing Program
@@ -16,10 +16,10 @@ A simple C# referrer that can be used for creating lobbies/rooms for online mult
 * See code block below for Linux install
   
   ```
-  sudo apt install dotnet-sdk-7.0
-  git clone https://github.com/Monstroe/Referrer-LiteNetLib.git
-  cd Referrer-LiteNetLib
-  dotnet run
+  sudo apt install dotnet-sdk-8.0
+  git clone https://github.com/Monstroe/LiteNetLib-Referrer.git
+  cd LiteNetLib-Referrer
+  dotnet run <port> <connectionKey>
   ```
 ## Version History
 * 1.0

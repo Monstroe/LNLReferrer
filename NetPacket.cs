@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LiteNetLib_Referrer;
 
-public class Packet
+public class NetPacket
 {
     public byte[] ByteArray
     {
@@ -42,15 +42,15 @@ public class Packet
 
     private List<byte> byteList;
 
-    public Packet()
+    public NetPacket()
     {
         CurrentIndex = 0;
         byteList = new List<byte>();
     }
 
-    public Packet(byte[] data) : this()
+    public NetPacket(byte[] data) : this()
     {
-        Write(data);
+        byteList.AddRange(data);
     }
 
     public void Clear()
@@ -82,12 +82,15 @@ public class Packet
         byteList.InsertRange(sizeof(int), Encoding.UTF8.GetBytes(value));
     }
 
-    public void Write(byte value) { byteList.Add(value); }
-    private void WriteInternal(byte[] value) { byteList.AddRange(value); }
+    public void Write(byte value)
+    {
+        byteList.Add(value);
+    }
+
     public void Write(byte[] value)
     {
         Write(value.Length);
-        WriteInternal(value);
+        byteList.AddRange(value);
     }
 
     public void Write(bool value)
@@ -243,15 +246,6 @@ public class Packet
         {
             Write(item);
         }
-    }
-
-    private byte[] ToProperEndian(byte[] value)
-    {
-        if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(value);
-        }
-        return value;
     }
 
     public byte ReadByte(bool moveIndexPosition = true)
@@ -476,6 +470,15 @@ public class Packet
         for (int i = 0; i < length; i++)
             value[i] = ReadString();
         CurrentIndex -= moveIndexPosition ? 0 : typeSize;
+        return value;
+    }
+
+    private byte[] ToProperEndian(byte[] value)
+    {
+        if (BitConverter.IsLittleEndian)
+        {
+            Array.Reverse(value);
+        }
         return value;
     }
 }
