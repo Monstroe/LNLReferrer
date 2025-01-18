@@ -23,6 +23,13 @@ public class PacketReceiver
 
     public void CreateRoom(Client client, NetPacket packet)
     {
+        if (Referrer.Instance.Rooms.Count > Referrer.MAX_ROOM_AMOUNT)
+        {
+            Console.Error.WriteLine("Client " + client.RemotePeer.ToString() + " attempted to create a room despite the maximum amount being reached");
+            PacketSender.Instance.Invalid(client, "Maximum room amount reached");
+            return;
+        }
+
         Room room = new Room(Referrer.Instance.GenerateRoomID());
         room.Members.Add(client);
         client.CurrentRoom = room;
